@@ -2,7 +2,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const activitiesList = document.getElementById("activities-list");
   const activitySelect = document.getElementById("activity");
   const signupForm = document.getElementById("signup-form");
+  const signupButton = document.getElementById("signup-button");
   const messageDiv = document.getElementById("message");
+
+  function updateSignupButton() {
+    const selectedOption = activitySelect.options[activitySelect.selectedIndex];
+    signupButton.disabled = !activitySelect.value || selectedOption.disabled;
+  }
 
   // Function to fetch activities from API
   async function fetchActivities() {
@@ -12,6 +18,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Clear loading message
       activitiesList.innerHTML = "";
+      activitySelect.replaceChildren(
+        new Option("-- Select an activity --", "")
+      );
 
       // Populate activities list
       Object.entries(activities).forEach(([name, details]) => {
@@ -20,6 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const spotsLeft =
           details.max_participants - details.participants.length;
+        const isFull = spotsLeft <= 0;
 
         // Create participants HTML with delete icons instead of bullet points
         const participantsHTML =
@@ -52,9 +62,12 @@ document.addEventListener("DOMContentLoaded", () => {
         // Add option to select dropdown
         const option = document.createElement("option");
         option.value = name;
-        option.textContent = name;
+        option.textContent = isFull ? `${name} (Full)` : name;
+        option.disabled = isFull;
         activitySelect.appendChild(option);
       });
+
+      updateSignupButton();
 
       // Add event listeners to delete buttons
       document.querySelectorAll(".delete-btn").forEach((button) => {
@@ -66,6 +79,8 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Error fetching activities:", error);
     }
   }
+
+  activitySelect.addEventListener("change", updateSignupButton);
 
   // Handle unregister functionality
   async function handleUnregister(event) {
